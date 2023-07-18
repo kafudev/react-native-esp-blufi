@@ -9,8 +9,7 @@ npm install @kafudev/react-native-esp-blufi
 ```
 
 ## Note
-This package is based on [react-native-esp-blufi](https://www.npmjs.com/package/react-native-esp-blufi)
-This package is based on [react-native-esp-blufi](https://www.npmjs.com/package/react-native-esp-blufi)
+This package is based on [react-native-esp-idf](https://www.npmjs.com/package/react-native-esp-idf)
 
 with the above package without connecting to bluetooth one cannot connect to wifi of esp device, to slove that issue made neccessary changes to the code .
 Now one can connect to esp device wifi without connecting to bluetooth.
