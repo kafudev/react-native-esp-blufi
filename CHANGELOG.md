@@ -1,5 +1,12 @@
 
 
+## [0.2.1](https://github.com/kafudev/react-native-esp-blufi/compare/v0.2.0...v0.2.1) (2023-07-19)
+
+
+### Bug Fixes
+
+* up dep ([c38c03d](https://github.com/kafudev/react-native-esp-blufi/commit/c38c03deb6540740435b3c94036f7cab6d9c6dd4))
+
 ## 0.2.0 (2023-07-18)
 
 
