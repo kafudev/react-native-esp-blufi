@@ -1,6 +1,6 @@
 {
   "name": "@kafudev/react-native-esp-blufi",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "ReactNative esp blufi application for ESP BluFi Config Network. ",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",

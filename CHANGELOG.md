@@ -1,5 +1,12 @@
 
 
+## [0.2.2](https://github.com/kafudev/react-native-esp-blufi/compare/v0.2.1...v0.2.2) (2023-07-19)
+
+
+### Bug Fixes
+
+* 兼容低版本ble库 ([a835d59](https://github.com/kafudev/react-native-esp-blufi/commit/a835d590af598f2d157bd66d8e7ec371b612a5d2))
+
 ## [0.2.1](https://github.com/kafudev/react-native-esp-blufi/compare/v0.2.0...v0.2.1) (2023-07-19)
 
 
