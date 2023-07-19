@@ -83,15 +83,20 @@ class rn {
   // 获取蓝牙适配器状态
   static async getBluetoothAdapterState({ success, fail }) {
     return new Promise((resolve, reject) => {
-      BleManager.checkState()
-        .then((state) => {
-          resolve(state);
-          success && success(state);
-        })
-        .catch((error) => {
-          reject(error);
-          fail && fail(error);
-        });
+      console.log('BleManager checkState 0');
+      resolve();
+      success && success();
+      // BleManager低于10版本，没有回调，需默认返回状态
+      // BleManager.checkState()
+      //   .then((state) => {
+      //     console.log('BleManager checkState', state);
+      //     resolve(state);
+      //     success && success(state);
+      //   })
+      //   .catch((error) => {
+      //     reject(error);
+      //     fail && fail(error);
+      //   });
     });
   }
 
