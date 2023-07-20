@@ -1,5 +1,12 @@
 
 
+## [0.3.0](https://github.com/kafudev/react-native-esp-blufi/compare/v0.2.3...v0.3.0) (2023-07-20)
+
+
+### Features
+
+* 新增获取状态和版本命令 ([5bbc346](https://github.com/kafudev/react-native-esp-blufi/commit/5bbc34678bbc5f4cea7e3d9c64c8e287e5629aaf))
+
 ## [0.2.3](https://github.com/kafudev/react-native-esp-blufi/compare/v0.2.2...v0.2.3) (2023-07-20)
 
 ## [0.2.2](https://github.com/kafudev/react-native-esp-blufi/compare/v0.2.1...v0.2.2) (2023-07-19)
