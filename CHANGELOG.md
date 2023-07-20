@@ -1,5 +1,12 @@
 
 
+## [0.3.1](https://github.com/kafudev/react-native-esp-blufi/compare/v0.3.0...v0.3.1) (2023-07-20)
+
+
+### Bug Fixes
+
+* 补全监听数据处理 ([c0776f8](https://github.com/kafudev/react-native-esp-blufi/commit/c0776f8786a3b86065f01a6568e128714adf3e83))
+
 ## [0.3.0](https://github.com/kafudev/react-native-esp-blufi/compare/v0.2.3...v0.3.0) (2023-07-20)
 
 
