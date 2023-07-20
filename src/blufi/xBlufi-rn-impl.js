@@ -678,13 +678,7 @@ function writeGetNearRouterSsid(deviceId, serviceId, characteristicId, data) {
 
 // 获取状态
 function writeSendGetState(deviceId, serviceId, characteristicId, data) {
-  console.log(
-    'writeSendGetState',
-    deviceId,
-    serviceId,
-    characteristicId,
-    data
-  );
+  console.log('writeSendGetState', deviceId, serviceId, characteristicId, data);
   sequenceControl = parseInt(sequenceControl) + 1;
   var frameControl = util.getFrameCTRLValue(
     self.data.isEncrypt,
@@ -1403,7 +1397,38 @@ function init({}) {
                                     },
                                   });
                                   break;
-
+                                case 15: // wifi联网状态
+                                  let scustomData = [];
+                                  for (var i = 0; i <= result.length; i++) {
+                                    scustomData.push(
+                                      String.fromCharCode(
+                                        parseInt(result[i], 16)
+                                      )
+                                    );
+                                  }
+                                  mDeviceEvent.notifyDeviceMsgEvent({
+                                    type: mDeviceEvent.XBLUFI_TYPE
+                                      .TYPE_GET_DEVICE_STATE,
+                                    result: true,
+                                    data: scustomData.join(''),
+                                  });
+                                  break;
+                                case 16: // 版本
+                                  let xcustomData = [];
+                                  for (var i = 0; i <= result.length; i++) {
+                                    xcustomData.push(
+                                      String.fromCharCode(
+                                        parseInt(result[i], 16)
+                                      )
+                                    );
+                                  }
+                                  mDeviceEvent.notifyDeviceMsgEvent({
+                                    type: mDeviceEvent.XBLUFI_TYPE
+                                      .TYPE_GET_DEVICE_VERSION,
+                                    result: true,
+                                    data: xcustomData.join(''),
+                                  });
+                                  break;
                                 case 17:
                                   getList(result, result.length, 0);
                                   break;

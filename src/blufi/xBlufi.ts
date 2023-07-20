@@ -21,6 +21,8 @@ const XBLUFI_TYPE = {
   TYPE_CONNECT_NEAR_ROUTER_LISTS: '5',
   TYPE_GET_DEVICE_LISTS_START: ' 41', //发现设备列表回调开始
   TYPE_GET_DEVICE_LISTS_STOP: '42', //停止发现设备列表回调
+  TYPE_GET_DEVICE_VERSION: '45', //获取设备版本
+  TYPE_GET_DEVICE_STATE: '46', //获取设备状态
 };
 
 const OnFireEvent = {
