@@ -152,9 +152,21 @@ class rn {
   }
 
   // 开始搜索
-  static async startBluetoothDevicesDiscovery({ serviceUUIDs, timeout, allowDuplicatesKey, options, success, fail }) {
+  static async startBluetoothDevicesDiscovery({
+    serviceUUIDs,
+    timeout,
+    allowDuplicatesKey,
+    options,
+    success,
+    fail,
+  }) {
     return new Promise((resolve, reject) => {
-      BleManager.scan([...serviceUUIDs], timeout || timeOut, allowDuplicatesKey, options)
+      BleManager.scan(
+        [...serviceUUIDs],
+        timeout || timeOut,
+        allowDuplicatesKey,
+        options
+      )
         .then(() => {
           console.log('BleManager scan ok');
           resolve();
@@ -664,6 +676,82 @@ function writeGetNearRouterSsid(deviceId, serviceId, characteristicId, data) {
   });
 }
 
+// 获取状态
+function writeSendGetState(deviceId, serviceId, characteristicId, data) {
+  console.log(
+    'writeSendGetState',
+    deviceId,
+    serviceId,
+    characteristicId,
+    data
+  );
+  sequenceControl = parseInt(sequenceControl) + 1;
+  var frameControl = util.getFrameCTRLValue(
+    self.data.isEncrypt,
+    false,
+    util.DIRECTION_OUTPUT,
+    false,
+    false
+  );
+  var value = util.writeData(
+    self.data.PACKAGE_CONTROL_VALUE,
+    util.SUBTYPE_GET_WIFI_STATUS,
+    frameControl,
+    sequenceControl,
+    0,
+    null
+  );
+  var typedArray = new Uint8Array(value);
+  rn.writeBLECharacteristicValue({
+    deviceId: deviceId,
+    serviceId: serviceId,
+    characteristicId: characteristicId,
+    value: Array.from(typedArray),
+    success: function () {},
+    fail: function (error) {
+      console.log('writeSendGetState', error);
+    },
+  });
+}
+
+// 获取版本
+function writeSendGetVersion(deviceId, serviceId, characteristicId, data) {
+  console.log(
+    'writeSendGetVersion',
+    deviceId,
+    serviceId,
+    characteristicId,
+    data
+  );
+  sequenceControl = parseInt(sequenceControl) + 1;
+  var frameControl = util.getFrameCTRLValue(
+    self.data.isEncrypt,
+    false,
+    util.DIRECTION_OUTPUT,
+    false,
+    false
+  );
+  var value = util.writeData(
+    self.data.PACKAGE_CONTROL_VALUE,
+    util.SUBTYPE_GET_VERSION,
+    frameControl,
+    sequenceControl,
+    0,
+    null
+  );
+  var typedArray = new Uint8Array(value);
+  rn.writeBLECharacteristicValue({
+    deviceId: deviceId,
+    serviceId: serviceId,
+    characteristicId: characteristicId,
+    value: Array.from(typedArray),
+    success: function () {},
+    fail: function (error) {
+      console.log('writeSendGetVersion', error);
+    },
+  });
+}
+
 function writeRouterSsid(deviceId, serviceId, characteristicId, data) {
   console.log('writeRouterSsid', deviceId, serviceId, characteristicId, data);
   var obj = {},
@@ -858,23 +946,23 @@ function init({}) {
     if (options.isStart) {
       //第一步检查蓝牙适配器是否可用
       rn.onBluetoothAdapterStateChange(function (res) {
-        console.log('onBluetoothAdapterStateChange', res)
+        console.log('onBluetoothAdapterStateChange', res);
         if (!res.available) {
         }
       });
       //第二步关闭适配器，重新来搜索
       rn.closeBluetoothAdapter({
         complete: function (res) {
-          console.log('closeBluetoothAdapter', res)
+          console.log('closeBluetoothAdapter', res);
           rn.openBluetoothAdapter({
             success: function (res) {
-              console.log('openBluetoothAdapter', res)
+              console.log('openBluetoothAdapter', res);
               rn.getBluetoothAdapterState({
                 success: function (res) {
-                  console.log('getBluetoothAdapterState', res)
+                  console.log('getBluetoothAdapterState', res);
                   rn.stopBluetoothDevicesDiscovery({
                     success: function (res) {
-                      console.log('stopBluetoothDevicesDiscovery', res)
+                      console.log('stopBluetoothDevicesDiscovery', res);
                       let devicesList = [];
                       let countsTimes = 0;
                       rn.onBluetoothDeviceFound(function (devices) {
@@ -1131,262 +1219,484 @@ function init({}) {
                 .indexOf(services[i].uuid.toLowerCase()) != -1
             ) {
               var serviceId = services[i].uuid;
-              rn.getBLEDeviceCharacteristics({
-                // 这里的 deviceId 需要已经通过 createBLEConnection 与对应设备建立链接
-                deviceId: deviceId,
-                serviceId: serviceId,
-                success: function (res) {
-                  var list = res.characteristics;
-                  console.log('获取特征值成功', list);
-                  if (list.length > 0) {
-                    for (var i = 0; i < list.length; i++) {
-                      var uuid = list[i].characteristic;
-                      if (
-                        self.data.characteristic_notify_uuid
-                          .toLowerCase()
-                          .indexOf(uuid.toLowerCase()) != -1
-                      ) {
-                        self.data.serviceId = serviceId;
-                        self.data.uuid = uuid;
-                        console.log('获取notify特征值成功', uuid);
-                        rn.notifyBLECharacteristicValueChange({
-                          state: true, // 启用 notify 功能
+              var list = res.characteristics;
+              console.log('获取特征值成功', list);
+              if (list.length > 0) {
+                for (var i = 0; i < list.length; i++) {
+                  var uuid = list[i].characteristic;
+                  if (
+                    self.data.characteristic_notify_uuid
+                      .toLowerCase()
+                      .indexOf(uuid.toLowerCase()) != -1
+                  ) {
+                    self.data.serviceId = serviceId;
+                    self.data.uuid = uuid;
+                    console.log('获取notify特征值成功', uuid);
+                    rn.notifyBLECharacteristicValueChange({
+                      state: true, // 启用 notify 功能
+                      deviceId: deviceId,
+                      serviceId: serviceId,
+                      characteristicId: uuid,
+                      success: function () {
+                        console.log('启用notify成功');
+                        let characteristicId =
+                          self.data.characteristic_write_uuid;
+                        //通知设备交互方式（是否加密） start
+                        client = util.blueDH(util.DH_P, util.DH_G, crypto);
+
+                        var kBytes = util.uint8ArrayToArray(
+                          client.getPublicKey()
+                        );
+                        var pBytes = util.hexByInt(util.DH_P);
+                        var gBytes = util.hexByInt(util.DH_G);
+                        var pgkLength =
+                          pBytes.length + gBytes.length + kBytes.length + 6;
+                        var pgkLen1 = (pgkLength >> 8) & 0xff;
+                        var pgkLen2 = pgkLength & 0xff;
+                        var data = [];
+                        data.push(util.NEG_SET_SEC_TOTAL_LEN);
+                        data.push(pgkLen1);
+                        data.push(pgkLen2);
+                        var frameControl = util.getFrameCTRLValue(
+                          false,
+                          false,
+                          util.DIRECTION_OUTPUT,
+                          false,
+                          false
+                        );
+                        var value = util.writeData(
+                          util.PACKAGE_VALUE,
+                          util.SUBTYPE_NEG,
+                          frameControl,
+                          sequenceControl,
+                          data.length,
+                          data
+                        );
+                        var typedArray = new Uint8Array(value);
+                        rn.writeBLECharacteristicValue({
                           deviceId: deviceId,
                           serviceId: serviceId,
-                          characteristicId: uuid,
+                          characteristicId: characteristicId,
+                          value: Array.from(typedArray),
                           success: function () {
-                            console.log('启用notify成功');
-                            let characteristicId =
-                              self.data.characteristic_write_uuid;
-                            //通知设备交互方式（是否加密） start
-                            client = util.blueDH(util.DH_P, util.DH_G, crypto);
-
-                            var kBytes = util.uint8ArrayToArray(
-                              client.getPublicKey()
-                            );
-                            var pBytes = util.hexByInt(util.DH_P);
-                            var gBytes = util.hexByInt(util.DH_G);
-                            var pgkLength =
-                              pBytes.length + gBytes.length + kBytes.length + 6;
-                            var pgkLen1 = (pgkLength >> 8) & 0xff;
-                            var pgkLen2 = pgkLength & 0xff;
-                            var data = [];
-                            data.push(util.NEG_SET_SEC_TOTAL_LEN);
-                            data.push(pgkLen1);
-                            data.push(pgkLen2);
-                            var frameControl = util.getFrameCTRLValue(
-                              false,
-                              false,
-                              util.DIRECTION_OUTPUT,
-                              false,
-                              false
-                            );
-                            var value = util.writeData(
-                              util.PACKAGE_VALUE,
-                              util.SUBTYPE_NEG,
-                              frameControl,
-                              sequenceControl,
-                              data.length,
-                              data
-                            );
-                            var typedArray = new Uint8Array(value);
-                            rn.writeBLECharacteristicValue({
-                              deviceId: deviceId,
-                              serviceId: serviceId,
-                              characteristicId: characteristicId,
-                              value: Array.from(typedArray),
-                              success: function () {
-                                console.log(
-                                  'initEsp32 writeBLECharacteristicValue'
-                                );
-                                getSecret(
-                                  deviceId,
-                                  serviceId,
-                                  characteristicId,
-                                  client,
-                                  kBytes,
-                                  pBytes,
-                                  gBytes,
-                                  null
-                                );
-                              },
-                              fail: function (error) {
-                                let obj = {
-                                  type: mDeviceEvent.XBLUFI_TYPE
-                                    .TYPE_INIT_ESP32_RESULT,
-                                  result: false,
-                                  data: error,
-                                };
-                                console.log(
-                                  'initEsp32 writeBLECharacteristicValue error:',
-                                  error,
-                                  obj
-                                );
-                                mDeviceEvent.notifyDeviceMsgEvent(obj);
-                              },
-                            });
-                            //通知设备交互方式（是否加密） end
-                            rn.onBLECharacteristicValueChange(function (res) {
-                              let list2 = util.ab2hex(res.value);
-                              // start
-                              let result = self.data.result;
-                              if (list2.length < 4) {
-                                console.log(407);
-                                return false;
-                              }
-                              var val = parseInt(list2[0], 16),
-                                type = val & 3,
-                                subType = val >> 2;
-                              var dataLength = parseInt(list2[3], 16);
-                              if (dataLength == 0) {
-                                return false;
-                              }
-                              var fragNum = util.hexToBinArray(list2[1]);
-                              list2 = isEncrypt(
-                                fragNum,
-                                list2,
-                                self.data.md5Key
-                              );
-                              result = result.concat(list2);
-                              self.data.result = result;
-                              if (self.data.flagEnd) {
-                                self.data.flagEnd = false;
-                                if (type == 1) {
-                                  let what = [];
-                                  console.log(
-                                    'recieve data subType: ',
-                                    subType
-                                  );
-                                  switch (subType) {
-                                    case 15:
-                                      if (result.length == 3) {
-                                        mDeviceEvent.notifyDeviceMsgEvent({
-                                          type: mDeviceEvent.XBLUFI_TYPE
-                                            .TYPE_CONNECT_ROUTER_RESULT,
-                                          result: false,
-                                          data: {
-                                            progress: 0,
-                                            ssid: what.join(''),
-                                          },
-                                        });
-                                      } else {
-                                        for (
-                                          var i = 0;
-                                          i <= result.length;
-                                          i++
-                                        ) {
-                                          var num =
-                                            parseInt(result[i], 16) + '';
-                                          if (i > 12)
-                                            what.push(
-                                              String.fromCharCode(
-                                                parseInt(result[i], 16)
-                                              )
-                                            );
-                                        }
-                                        mDeviceEvent.notifyDeviceMsgEvent({
-                                          type: mDeviceEvent.XBLUFI_TYPE
-                                            .TYPE_CONNECT_ROUTER_RESULT,
-                                          result: true,
-                                          data: {
-                                            progress: 100,
-                                            ssid: what.join(''),
-                                          },
-                                        });
-                                      }
-
-                                      break;
-                                    case 19: //自定义数据
-                                      let customData = [];
-                                      for (var i = 0; i <= result.length; i++) {
-                                        customData.push(
-                                          String.fromCharCode(
-                                            parseInt(result[i], 16)
-                                          )
-                                        );
-                                      }
-                                      let obj = {
-                                        type: mDeviceEvent.XBLUFI_TYPE
-                                          .TYPE_RECIEVE_CUSTON_DATA,
-                                        result: true,
-                                        data: customData.join(''),
-                                      };
-                                      mDeviceEvent.notifyDeviceMsgEvent(obj);
-
-                                      break;
-                                    case util.SUBTYPE_NEGOTIATION_NEG:
-                                      var arr = util.hexByInt(result.join(''));
-                                      var clientSecret = client.computeSecret(
-                                        new Uint8Array(arr)
-                                      );
-                                      var md5Key = md5.array(clientSecret);
-                                      self.data.md5Key = md5Key;
-                                      mDeviceEvent.notifyDeviceMsgEvent({
-                                        type: mDeviceEvent.XBLUFI_TYPE
-                                          .TYPE_INIT_ESP32_RESULT,
-                                        result: true,
-                                        data: {
-                                          deviceId,
-                                          serviceId,
-                                          characteristicId,
-                                        },
-                                      });
-                                      break;
-
-                                    case 17:
-                                      getList(result, result.length, 0);
-                                      break;
-
-                                    default:
-                                      console.log(468);
-                                      //self.setFailProcess(true, util.descFailList[4])
-                                      console.log(
-                                        '入网失败 468 :',
-                                        util.failList[4]
-                                      );
-                                      break;
-                                  }
-                                  self.data.result = [];
-                                } else {
-                                  //console.log(472);
-                                  console.log(
-                                    '入网失败 472:',
-                                    util.failList[4]
-                                  );
-                                }
-                              }
-                              // end
-                            });
-                          },
-                          fail: function (res) {
                             console.log(
-                              'fail notifyBLECharacteristicValueChange:' + res
+                              'initEsp32 writeBLECharacteristicValue'
                             );
+                            getSecret(
+                              deviceId,
+                              serviceId,
+                              characteristicId,
+                              client,
+                              kBytes,
+                              pBytes,
+                              gBytes,
+                              null
+                            );
+                          },
+                          fail: function (error) {
                             let obj = {
                               type: mDeviceEvent.XBLUFI_TYPE
                                 .TYPE_INIT_ESP32_RESULT,
                               result: false,
-                              data: res,
+                              data: error,
                             };
+                            console.log(
+                              'initEsp32 writeBLECharacteristicValue error:',
+                              error,
+                              obj
+                            );
                             mDeviceEvent.notifyDeviceMsgEvent(obj);
                           },
                         });
-                      }
-                    }
+                        //通知设备交互方式（是否加密） end
+                        rn.onBLECharacteristicValueChange(function (res) {
+                          let list2 = util.ab2hex(res.value);
+                          // start
+                          let result = self.data.result;
+                          if (list2.length < 4) {
+                            console.log(407);
+                            return false;
+                          }
+                          var val = parseInt(list2[0], 16),
+                            type = val & 3,
+                            subType = val >> 2;
+                          var dataLength = parseInt(list2[3], 16);
+                          if (dataLength == 0) {
+                            return false;
+                          }
+                          var fragNum = util.hexToBinArray(list2[1]);
+                          list2 = isEncrypt(fragNum, list2, self.data.md5Key);
+                          result = result.concat(list2);
+                          self.data.result = result;
+                          if (self.data.flagEnd) {
+                            self.data.flagEnd = false;
+                            if (type == 1) {
+                              let what = [];
+                              console.log('recieve data subType: ', subType);
+                              switch (subType) {
+                                case 15:
+                                  if (result.length == 3) {
+                                    mDeviceEvent.notifyDeviceMsgEvent({
+                                      type: mDeviceEvent.XBLUFI_TYPE
+                                        .TYPE_CONNECT_ROUTER_RESULT,
+                                      result: false,
+                                      data: {
+                                        progress: 0,
+                                        ssid: what.join(''),
+                                      },
+                                    });
+                                  } else {
+                                    for (var i = 0; i <= result.length; i++) {
+                                      var num = parseInt(result[i], 16) + '';
+                                      if (i > 12)
+                                        what.push(
+                                          String.fromCharCode(
+                                            parseInt(result[i], 16)
+                                          )
+                                        );
+                                    }
+                                    mDeviceEvent.notifyDeviceMsgEvent({
+                                      type: mDeviceEvent.XBLUFI_TYPE
+                                        .TYPE_CONNECT_ROUTER_RESULT,
+                                      result: true,
+                                      data: {
+                                        progress: 100,
+                                        ssid: what.join(''),
+                                      },
+                                    });
+                                  }
+
+                                  break;
+                                case 19: //自定义数据
+                                  let customData = [];
+                                  for (var i = 0; i <= result.length; i++) {
+                                    customData.push(
+                                      String.fromCharCode(
+                                        parseInt(result[i], 16)
+                                      )
+                                    );
+                                  }
+                                  let obj = {
+                                    type: mDeviceEvent.XBLUFI_TYPE
+                                      .TYPE_RECIEVE_CUSTON_DATA,
+                                    result: true,
+                                    data: customData.join(''),
+                                  };
+                                  mDeviceEvent.notifyDeviceMsgEvent(obj);
+
+                                  break;
+                                case util.SUBTYPE_NEGOTIATION_NEG:
+                                  var arr = util.hexByInt(result.join(''));
+                                  var clientSecret = client.computeSecret(
+                                    new Uint8Array(arr)
+                                  );
+                                  var md5Key = md5.array(clientSecret);
+                                  self.data.md5Key = md5Key;
+                                  mDeviceEvent.notifyDeviceMsgEvent({
+                                    type: mDeviceEvent.XBLUFI_TYPE
+                                      .TYPE_INIT_ESP32_RESULT,
+                                    result: true,
+                                    data: {
+                                      deviceId,
+                                      serviceId,
+                                      characteristicId,
+                                    },
+                                  });
+                                  break;
+
+                                case 17:
+                                  getList(result, result.length, 0);
+                                  break;
+
+                                default:
+                                  console.log(468);
+                                  //self.setFailProcess(true, util.descFailList[4])
+                                  console.log(
+                                    '入网失败 468 :',
+                                    util.failList[4]
+                                  );
+                                  break;
+                              }
+                              self.data.result = [];
+                            } else {
+                              //console.log(472);
+                              console.log('入网失败 472:', util.failList[4]);
+                            }
+                          }
+                          // end
+                        });
+                      },
+                      fail: function (res) {
+                        console.log(
+                          'fail notifyBLECharacteristicValueChange:' + res
+                        );
+                        let obj = {
+                          type: mDeviceEvent.XBLUFI_TYPE.TYPE_INIT_ESP32_RESULT,
+                          result: false,
+                          data: res,
+                        };
+                        mDeviceEvent.notifyDeviceMsgEvent(obj);
+                      },
+                    });
                   }
-                },
-                fail: function (res) {
-                  let obj = {
-                    type: mDeviceEvent.XBLUFI_TYPE.TYPE_INIT_ESP32_RESULT,
-                    result: false,
-                    data: res,
-                  };
-                  mDeviceEvent.notifyDeviceMsgEvent(obj);
-                  console.log(
-                    'fail getBLEDeviceCharacteristics:' + JSON.stringify(res)
-                  );
-                },
-              });
+                }
+              }
+              // rn.getBLEDeviceCharacteristics({
+              //   // 这里的 deviceId 需要已经通过 createBLEConnection 与对应设备建立链接
+              //   deviceId: deviceId,
+              //   serviceId: serviceId,
+              //   success: function (res) {
+              //     var list = res.characteristics;
+              //     console.log('获取特征值成功', list);
+              //     if (list.length > 0) {
+              //       for (var i = 0; i < list.length; i++) {
+              //         var uuid = list[i].characteristic;
+              //         if (
+              //           self.data.characteristic_notify_uuid
+              //             .toLowerCase()
+              //             .indexOf(uuid.toLowerCase()) != -1
+              //         ) {
+              //           self.data.serviceId = serviceId;
+              //           self.data.uuid = uuid;
+              //           console.log('获取notify特征值成功', uuid);
+              //           rn.notifyBLECharacteristicValueChange({
+              //             state: true, // 启用 notify 功能
+              //             deviceId: deviceId,
+              //             serviceId: serviceId,
+              //             characteristicId: uuid,
+              //             success: function () {
+              //               console.log('启用notify成功');
+              //               let characteristicId =
+              //                 self.data.characteristic_write_uuid;
+              //               //通知设备交互方式（是否加密） start
+              //               client = util.blueDH(util.DH_P, util.DH_G, crypto);
+
+              //               var kBytes = util.uint8ArrayToArray(
+              //                 client.getPublicKey()
+              //               );
+              //               var pBytes = util.hexByInt(util.DH_P);
+              //               var gBytes = util.hexByInt(util.DH_G);
+              //               var pgkLength =
+              //                 pBytes.length + gBytes.length + kBytes.length + 6;
+              //               var pgkLen1 = (pgkLength >> 8) & 0xff;
+              //               var pgkLen2 = pgkLength & 0xff;
+              //               var data = [];
+              //               data.push(util.NEG_SET_SEC_TOTAL_LEN);
+              //               data.push(pgkLen1);
+              //               data.push(pgkLen2);
+              //               var frameControl = util.getFrameCTRLValue(
+              //                 false,
+              //                 false,
+              //                 util.DIRECTION_OUTPUT,
+              //                 false,
+              //                 false
+              //               );
+              //               var value = util.writeData(
+              //                 util.PACKAGE_VALUE,
+              //                 util.SUBTYPE_NEG,
+              //                 frameControl,
+              //                 sequenceControl,
+              //                 data.length,
+              //                 data
+              //               );
+              //               var typedArray = new Uint8Array(value);
+              //               rn.writeBLECharacteristicValue({
+              //                 deviceId: deviceId,
+              //                 serviceId: serviceId,
+              //                 characteristicId: characteristicId,
+              //                 value: Array.from(typedArray),
+              //                 success: function () {
+              //                   console.log(
+              //                     'initEsp32 writeBLECharacteristicValue'
+              //                   );
+              //                   getSecret(
+              //                     deviceId,
+              //                     serviceId,
+              //                     characteristicId,
+              //                     client,
+              //                     kBytes,
+              //                     pBytes,
+              //                     gBytes,
+              //                     null
+              //                   );
+              //                 },
+              //                 fail: function (error) {
+              //                   let obj = {
+              //                     type: mDeviceEvent.XBLUFI_TYPE
+              //                       .TYPE_INIT_ESP32_RESULT,
+              //                     result: false,
+              //                     data: error,
+              //                   };
+              //                   console.log(
+              //                     'initEsp32 writeBLECharacteristicValue error:',
+              //                     error,
+              //                     obj
+              //                   );
+              //                   mDeviceEvent.notifyDeviceMsgEvent(obj);
+              //                 },
+              //               });
+              //               //通知设备交互方式（是否加密） end
+              //               rn.onBLECharacteristicValueChange(function (res) {
+              //                 let list2 = util.ab2hex(res.value);
+              //                 // start
+              //                 let result = self.data.result;
+              //                 if (list2.length < 4) {
+              //                   console.log(407);
+              //                   return false;
+              //                 }
+              //                 var val = parseInt(list2[0], 16),
+              //                   type = val & 3,
+              //                   subType = val >> 2;
+              //                 var dataLength = parseInt(list2[3], 16);
+              //                 if (dataLength == 0) {
+              //                   return false;
+              //                 }
+              //                 var fragNum = util.hexToBinArray(list2[1]);
+              //                 list2 = isEncrypt(
+              //                   fragNum,
+              //                   list2,
+              //                   self.data.md5Key
+              //                 );
+              //                 result = result.concat(list2);
+              //                 self.data.result = result;
+              //                 if (self.data.flagEnd) {
+              //                   self.data.flagEnd = false;
+              //                   if (type == 1) {
+              //                     let what = [];
+              //                     console.log(
+              //                       'recieve data subType: ',
+              //                       subType
+              //                     );
+              //                     switch (subType) {
+              //                       case 15:
+              //                         if (result.length == 3) {
+              //                           mDeviceEvent.notifyDeviceMsgEvent({
+              //                             type: mDeviceEvent.XBLUFI_TYPE
+              //                               .TYPE_CONNECT_ROUTER_RESULT,
+              //                             result: false,
+              //                             data: {
+              //                               progress: 0,
+              //                               ssid: what.join(''),
+              //                             },
+              //                           });
+              //                         } else {
+              //                           for (
+              //                             var i = 0;
+              //                             i <= result.length;
+              //                             i++
+              //                           ) {
+              //                             var num =
+              //                               parseInt(result[i], 16) + '';
+              //                             if (i > 12)
+              //                               what.push(
+              //                                 String.fromCharCode(
+              //                                   parseInt(result[i], 16)
+              //                                 )
+              //                               );
+              //                           }
+              //                           mDeviceEvent.notifyDeviceMsgEvent({
+              //                             type: mDeviceEvent.XBLUFI_TYPE
+              //                               .TYPE_CONNECT_ROUTER_RESULT,
+              //                             result: true,
+              //                             data: {
+              //                               progress: 100,
+              //                               ssid: what.join(''),
+              //                             },
+              //                           });
+              //                         }
+
+              //                         break;
+              //                       case 19: //自定义数据
+              //                         let customData = [];
+              //                         for (var i = 0; i <= result.length; i++) {
+              //                           customData.push(
+              //                             String.fromCharCode(
+              //                               parseInt(result[i], 16)
+              //                             )
+              //                           );
+              //                         }
+              //                         let obj = {
+              //                           type: mDeviceEvent.XBLUFI_TYPE
+              //                             .TYPE_RECIEVE_CUSTON_DATA,
+              //                           result: true,
+              //                           data: customData.join(''),
+              //                         };
+              //                         mDeviceEvent.notifyDeviceMsgEvent(obj);
+
+              //                         break;
+              //                       case util.SUBTYPE_NEGOTIATION_NEG:
+              //                         var arr = util.hexByInt(result.join(''));
+              //                         var clientSecret = client.computeSecret(
+              //                           new Uint8Array(arr)
+              //                         );
+              //                         var md5Key = md5.array(clientSecret);
+              //                         self.data.md5Key = md5Key;
+              //                         mDeviceEvent.notifyDeviceMsgEvent({
+              //                           type: mDeviceEvent.XBLUFI_TYPE
+              //                             .TYPE_INIT_ESP32_RESULT,
+              //                           result: true,
+              //                           data: {
+              //                             deviceId,
+              //                             serviceId,
+              //                             characteristicId,
+              //                           },
+              //                         });
+              //                         break;
+
+              //                       case 17:
+              //                         getList(result, result.length, 0);
+              //                         break;
+
+              //                       default:
+              //                         console.log(468);
+              //                         //self.setFailProcess(true, util.descFailList[4])
+              //                         console.log(
+              //                           '入网失败 468 :',
+              //                           util.failList[4]
+              //                         );
+              //                         break;
+              //                     }
+              //                     self.data.result = [];
+              //                   } else {
+              //                     //console.log(472);
+              //                     console.log(
+              //                       '入网失败 472:',
+              //                       util.failList[4]
+              //                     );
+              //                   }
+              //                 }
+              //                 // end
+              //               });
+              //             },
+              //             fail: function (res) {
+              //               console.log(
+              //                 'fail notifyBLECharacteristicValueChange:' + res
+              //               );
+              //               let obj = {
+              //                 type: mDeviceEvent.XBLUFI_TYPE
+              //                   .TYPE_INIT_ESP32_RESULT,
+              //                 result: false,
+              //                 data: res,
+              //               };
+              //               mDeviceEvent.notifyDeviceMsgEvent(obj);
+              //             },
+              //           });
+              //         }
+              //       }
+              //     }
+              //   },
+              //   fail: function (res) {
+              //     let obj = {
+              //       type: mDeviceEvent.XBLUFI_TYPE.TYPE_INIT_ESP32_RESULT,
+              //       result: false,
+              //       data: res,
+              //     };
+              //     mDeviceEvent.notifyDeviceMsgEvent(obj);
+              //     console.log(
+              //       'fail getBLEDeviceCharacteristics:' + JSON.stringify(res)
+              //     );
+              //   },
+              // });
               break;
             }
           }
@@ -1430,6 +1740,27 @@ function init({}) {
   mDeviceEvent.listenSendGetNearRouterSsid(true, function (options) {
     console.log('getNearRouterSsid: ', options);
     writeGetNearRouterSsid(
+      self.data.deviceId,
+      self.data.service_uuid,
+      self.data.characteristic_write_uuid,
+      null
+    );
+  });
+
+  // 监听获取版本
+  mDeviceEvent.listenSendGetVersion(true, function (options) {
+    console.log('getVersion: ', options);
+    writeSendGetVersion(
+      self.data.deviceId,
+      self.data.service_uuid,
+      self.data.characteristic_write_uuid,
+      null
+    );
+  });
+  // 监听获取状态
+  mDeviceEvent.listenSendGetState(true, function (options) {
+    console.log('getState: ', options);
+    writeSendGetState(
       self.data.deviceId,
       self.data.service_uuid,
       self.data.characteristic_write_uuid,

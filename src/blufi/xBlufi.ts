@@ -31,6 +31,8 @@ const OnFireEvent = {
   EVENT_NOFITY_SEND_ROUTER_SSID_PASSWORD: '50', //通知发送路由器的ssid和password
   EVENT_NOFITY_SEND_CUSTON_DATA: '51', //通知发送自定义数据
   EVENT_NOFITY_SEND_GET_ROUTER_SSID: '52', //获取周围的SSID
+  EVENT_NOFITY_SEND_GET_STATE: '60', //获取wifi状态
+  EVENT_NOFITY_SEND_GET_VERSION: '80', //获取版本
 };
 
 /**
@@ -131,13 +133,49 @@ function listenInitBleEsp32(isSetListener: boolean, funtion: Function): void {
 }
 
 /**
+ * 发送获取版本通知
+ */
+function notifySendGetVersion(): void {
+  mOnFire.fire(OnFireEvent.EVENT_NOFITY_SEND_GET_VERSION);
+}
+/** 发送获取版本监听
+ * @param isSetListener 是否设置监听
+ */
+function listenSendGetVersion(isSetListener: boolean, funtion: Function): void {
+  if (isSetListener) {
+    mOnFire.on(OnFireEvent.EVENT_NOFITY_SEND_GET_VERSION, funtion);
+  } else {
+    mOnFire.un(funtion);
+  }
+}
 
-发送获取附近路由器SSID列表的通知 */ function notifySendGetNearRouterSsid(): void {
+/**
+ * 发送获取ssid状态通知
+ */
+function notifySendGetState(): void {
+  mOnFire.fire(OnFireEvent.EVENT_NOFITY_SEND_GET_STATE);
+}
+/** 发送获取ssid状态监听
+ * @param isSetListener 是否设置监听
+ */
+function listenSendGetState(isSetListener: boolean, funtion: Function): void {
+  if (isSetListener) {
+    mOnFire.on(OnFireEvent.EVENT_NOFITY_SEND_GET_STATE, funtion);
+  } else {
+    mOnFire.un(funtion);
+  }
+}
+
+/**
+ * 发送获取附近路由器SSID列表的通知
+ */
+function notifySendGetNearRouterSsid(): void {
   mOnFire.fire(OnFireEvent.EVENT_NOFITY_SEND_GET_ROUTER_SSID);
 }
-/**
-
-发送获取附近路由器SSID列表的监听 */ function listenSendGetNearRouterSsid(
+/** 发送获取附近路由器SSID列表的监听
+ * @param isSetListener 是否设置监听
+ */
+function listenSendGetNearRouterSsid(
   isSetListener: boolean,
   funtion: Function
 ): void {
@@ -147,17 +185,18 @@ function listenInitBleEsp32(isSetListener: boolean, funtion: Function): void {
     mOnFire.un(funtion);
   }
 }
-/**
 
-发送路由器SSID和密码的通知
-@param options 连接参数 {"ssid":"xxx","password":"xxx"} */ function notifySendRouterSsidAndPassword(
-  options: any
-): void {
+/**
+ * 发送路由器SSID和密码的通知
+ * @param options 连接参数 {"ssid":"xxx","password":"xxx"}
+ */
+function notifySendRouterSsidAndPassword(options: any): void {
   mOnFire.fire(OnFireEvent.EVENT_NOFITY_SEND_ROUTER_SSID_PASSWORD, options);
 }
 /**
-
-发送路由器SSID和密码的监听 */ function listenSendRouterSsidAndPassword(
+ * 发送路由器SSID和密码的监听
+ */
+function listenSendRouterSsidAndPassword(
   isSetListener: boolean,
   funtion: Function
 ): void {
@@ -168,17 +207,16 @@ function listenInitBleEsp32(isSetListener: boolean, funtion: Function): void {
   }
 }
 /**
-
-发送自定义数据的通知
-@param options 自定义数据 */ function notifySendCustomData(options: any): void {
+ * 发送自定义数据的通知
+ * @param options 自定义数据
+ */
+function notifySendCustomData(options: any): void {
   mOnFire.fire(OnFireEvent.EVENT_NOFITY_SEND_CUSTON_DATA, options);
 }
 /**
-
-发送自定义数据的监听 */ function listenSendCustomData(
-  isSetListener: boolean,
-  funtion: Function
-): void {
+ * 发送自定义数据的监听
+ */
+function listenSendCustomData(isSetListener: boolean, funtion: Function): void {
   if (isSetListener) {
     mOnFire.on(OnFireEvent.EVENT_NOFITY_SEND_CUSTON_DATA, funtion);
   } else {
@@ -198,6 +236,10 @@ export {
   listenConnectBle,
   notifyInitBleEsp32,
   listenInitBleEsp32,
+  notifySendGetVersion,
+  listenSendGetVersion,
+  notifySendGetState,
+  listenSendGetState,
   notifySendGetNearRouterSsid,
   listenSendGetNearRouterSsid,
   notifySendRouterSsidAndPassword,
@@ -219,6 +261,10 @@ export default {
   listenConnectBle,
   notifyInitBleEsp32,
   listenInitBleEsp32,
+  notifySendGetVersion,
+  listenSendGetVersion,
+  notifySendGetState,
+  listenSendGetState,
   notifySendGetNearRouterSsid,
   listenSendGetNearRouterSsid,
   notifySendRouterSsidAndPassword,

@@ -82,6 +82,16 @@ const App = () => {
     // ...
   }
 
+  // 获取版本
+  function getVersion(): void {
+    // ...
+  }
+
+  // 获取状态
+  function getState(): void {
+    // ...
+  }
+
   function scanNetworks(): void {
     // ...
   }
