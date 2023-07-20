@@ -152,9 +152,9 @@ class rn {
   }
 
   // 开始搜索
-  static async startBluetoothDevicesDiscovery({ success, fail }) {
+  static async startBluetoothDevicesDiscovery({ serviceUUIDs, timeout, allowDuplicatesKey, options, success, fail }) {
     return new Promise((resolve, reject) => {
-      BleManager.scan([], timeOut, false)
+      BleManager.scan([...serviceUUIDs], timeout || timeOut, allowDuplicatesKey, options)
         .then(() => {
           console.log('BleManager scan ok');
           resolve();
@@ -858,18 +858,23 @@ function init({}) {
     if (options.isStart) {
       //第一步检查蓝牙适配器是否可用
       rn.onBluetoothAdapterStateChange(function (res) {
+        console.log('onBluetoothAdapterStateChange', res)
         if (!res.available) {
         }
       });
       //第二步关闭适配器，重新来搜索
       rn.closeBluetoothAdapter({
         complete: function (res) {
+          console.log('closeBluetoothAdapter', res)
           rn.openBluetoothAdapter({
             success: function (res) {
+              console.log('openBluetoothAdapter', res)
               rn.getBluetoothAdapterState({
                 success: function (res) {
+                  console.log('getBluetoothAdapterState', res)
                   rn.stopBluetoothDevicesDiscovery({
                     success: function (res) {
+                      console.log('stopBluetoothDevicesDiscovery', res)
                       let devicesList = [];
                       let countsTimes = 0;
                       rn.onBluetoothDeviceFound(function (devices) {
@@ -940,6 +945,9 @@ function init({}) {
                         mDeviceEvent.notifyDeviceMsgEvent(obj);
                       });
                       rn.startBluetoothDevicesDiscovery({
+                        options: options.options || {},
+                        timeout: options.timeout || timeOut,
+                        serviceUUIDs: options.serviceUUIDs || [],
                         allowDuplicatesKey: true,
                         success: function () {
                           console.log('startBluetoothDevicesDiscovery');
