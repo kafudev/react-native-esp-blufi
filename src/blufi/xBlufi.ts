@@ -19,6 +19,7 @@ const XBLUFI_TYPE = {
   TYPE_RECIEVE_CUSTON_DATA: '3', //接收到自定义数据
   TYPE_CONNECT_ROUTER_RESULT: '4',
   TYPE_CONNECT_NEAR_ROUTER_LISTS: '5',
+  TYPE_CONNECT_ROUTER_SEND_END: '8', // 发送wifi数据结束
   TYPE_GET_DEVICE_LISTS_START: ' 41', //发现设备列表回调开始
   TYPE_GET_DEVICE_LISTS_STOP: '42', //停止发现设备列表回调
   TYPE_GET_DEVICE_VERSION: '45', //获取设备版本
@@ -208,6 +209,7 @@ function listenSendRouterSsidAndPassword(
     mOnFire.un(funtion);
   }
 }
+
 /**
  * 发送自定义数据的通知
  * @param options 自定义数据
