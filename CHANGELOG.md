@@ -1,5 +1,12 @@
 
 
+## [0.3.2](https://github.com/kafudev/react-native-esp-blufi/compare/v0.3.1...v0.3.2) (2023-11-17)
+
+
+### Bug Fixes
+
+* fixed connect bug ([2f932d3](https://github.com/kafudev/react-native-esp-blufi/commit/2f932d3cc66fc32e61bac9932418892f39b77cde))
+
 ## [0.3.1](https://github.com/kafudev/react-native-esp-blufi/compare/v0.3.0...v0.3.1) (2023-07-20)
 
 
