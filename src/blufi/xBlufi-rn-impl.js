@@ -1,4 +1,4 @@
-import { NativeModules, NativeEventEmitter } from 'react-native';
+import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
 import BleManager from 'react-native-ble-manager';
 import util from './util.js';
 import mDeviceEvent from './xBlufi';
@@ -64,6 +64,11 @@ class rn {
   // 打开蓝牙适配器
   static async openBluetoothAdapter({ success, fail }) {
     return new Promise((resolve, reject) => {
+      if (Platform.OS === 'ios') {
+        resolve();
+        success && success();
+        return;
+      }
       BleManager.enableBluetooth()
         .then(() => {
           resolve();
@@ -127,6 +132,11 @@ class rn {
   // 设置MTU
   static async setBLEMTU({ deviceId, mtu, success, fail }) {
     return new Promise((resolve, reject) => {
+      if (Platform.OS === 'ios') {
+        resolve(256);
+        success && success(256);
+        return;
+      }
       BleManager.requestMTU(deviceId, mtu)
         .then((mtu) => {
           resolve(mtu);
